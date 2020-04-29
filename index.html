@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Shadow Mapping</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="main.css" type="text/css" media="all">
+    </head>
+    <body>
+        <div id="main-container">
+            <div id="draw-container">
+                <canvas id="draw-canvas">
+                    Oops ... your browser doesn't support the HTML5 canvas element
+                </canvas>
+            </div>
+
+            <div id="controls">
+                <h4>Controls</h4>
+                <div>
+                    Mode: 
+                    <input type="radio" id="mouse-mode-rb" name="mode" value="mouse" checked><label for="mouse-mode-rb">Mouse</label>
+                    <input type="radio" id="fly-mode-rb" name="mode" value="fly"><label for="fly-mode-rb">Fly</label>
+                </div>
+                <div>
+                    <b>Mouse mode</b>
+                    <ul>
+                        <li><b>Left drag</b> - orbit</li>
+                        <li><b>Shift-left-drag</b> - track</li>
+                        <li><b>Mouse wheel</b> - dolly</li>
+                    </ul>
+                </div>
+                <div>
+                    <b>Fly mode</b>
+                    <ul>
+                        <li><b>Left drag</b> - turn</li>
+                        <li><b>W/S</b> - dolly</li>
+                        <li><b>A/D</b> - track left/right</li>
+                        <li><b>Q/E</b> - track up/down</li>
+                    </ul>
+                </div>
+                <div>
+                    <input type="radio" id="perspective-rb" name="projection" value="perspective" checked><label for="perspective-rb">Perspective</label>
+                    <input type="radio" id="ortho-rb" name="projection" value="ortho"><label for="ortho-rb">Orthographic</label>
+                </div>
+                <div><button id="reset-btn">Reset View</button></div>
+            </div>
+            
+        </div>
+
+        <!-- Load the main script module -->
+        <script type="module" src="js/main.js"></script>
+    </body>
+</html>
