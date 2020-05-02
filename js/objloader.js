@@ -45,7 +45,12 @@ export function loadObjMesh(text) {
                     let v2 = parseVertex(parts[i], objData);
                     objData.verts.push(v2);
                 }
+            } else if (command === "usemtl"){
+                //groups of vertices rather than one big group
+                //map of vertices key as text after usemtl value is list of vertices
+                console.log("test");
             }
+
         }
     }
 

@@ -7,9 +7,10 @@ PA 4 - Camera Controls
 import { Grid } from "./grid.js";
 import { Camera } from "./camera.js"
 import { Controls } from './controls.js';
-import { RenderMeshBary } from "./rendermesh-bary.js";
 import { makeCube } from './cube.js';
 import { loadObjMesh } from './objloader.js';
+import * as vec3 from './gl-matrix/vec3.js';
+import { GLMesh } from './glmesh.js';
 
 import * as glMatrix from './gl-matrix/common.js';
 import * as mat4 from "./gl-matrix/mat4.js";
@@ -51,34 +52,26 @@ export class Scene {
         
         // Create the meshes for the scene
         this.grid = new Grid(gl);   // The reference grid
-        this.ground = new RenderMeshBary(gl, makeGround());
-        //this.cube = new RenderMeshBary(gl, makeCube());
+        this.ground = new GLMesh(gl, makeGround());
 
-        // Load the cow from an OBJ file.  Caution: the fetch method is 
+        // Load the trunk from an OBJ file.  Caution: the fetch method is 
         // asynchronous, so the mesh will not be immediately available.  
         // Make sure to check for null before rendering.  Use this as an example
         // to load other OBJ files.
-        this.car = null;
+        this.trunk = null;
         fetch('obj2/dead1.obj')
             .then( (response) => {
                 return response.text();
             })
             .then( (text) => {
                 let objMesh = loadObjMesh(text);
-                this.car = new RenderMeshBary(gl, objMesh);
-            });
-
-        this.raptor = null;
-        fetch('data/raptor_01.obj')
-            .then( (response) => {
-                return response.text();
-            })
-            .then( (text) => {
-                let objMesh = loadObjMesh(text);
-                this.raptor = new RenderMeshBary(gl, objMesh);
+                console.log(objMesh);
+                this.trunk = new GLMesh(gl, objMesh);
+                //glmesh from pa5 
             });
 
     }
+
 
     /**
      * A convenience method to set all three matrices in the shader program.
@@ -174,20 +167,22 @@ export class Scene {
         // Set the model matrix in the shader
         gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
         gl.uniform3f( shader.uniform('uColor'), 0.52, 0.52, 0.52);
-        this.ground.render(gl, shader);
 
-        if(this.car !== null) {
+        if(this.trunk !== null) {
             // Set up the cow's transformation
             mat4.identity(this.modelMatrix);
-            mat4.translate(this.modelMatrix, this.modelMatrix, [0.0, 1.68, 0.0]);
-            mat4.scale(this.modelMatrix, this.modelMatrix, [0.1, 0.1, 0.1]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [0.0, 3, 0.0]);
+            //mat4.scale(this.modelMatrix, this.modelMatrix, [0.1, 0.1, 0.1]);
             // Set the model matrix in the shader
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            gl.uniform3fv(shader.uniform('Kd'), vec3.create(0.310813, 0.061869, 0.018581) );
+            //gl.uniform1f()
+        
             // Set the color in the shader
 
 
-            // Draw the car
-            this.car.render(gl, shader);
+            // Draw the trunk
+            this.trunk.render(gl, shader);
         }
 
         // Reset the model matrix to the identity
