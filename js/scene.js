@@ -7,7 +7,6 @@ PA 4 - Camera Controls
 import { Grid } from "./grid.js";
 import { Camera } from "./camera.js"
 import { Controls } from './controls.js';
-import { makeCube } from './cube.js';
 import { loadObjMesh } from './objloader.js';
 import * as vec3 from './gl-matrix/vec3.js';
 import { GLMesh } from './glmesh.js';
@@ -52,7 +51,10 @@ export class Scene {
         
         // Create the meshes for the scene
         this.grid = new Grid(gl);   // The reference grid
-        this.ground = new GLMesh(gl, makeGround());
+        //this.ground = new GLMesh(gl, makeGround());
+
+        //The position of the light in world coordinates
+        this.worldLightPos = [2, 2, 0];
 
         // Load the trunk from an OBJ file.  Caution: the fetch method is 
         // asynchronous, so the mesh will not be immediately available.  
@@ -102,12 +104,19 @@ export class Scene {
         // Draw the objects using wireShader
         wireShader.use(gl);
         this.setMatrices(gl, wireShader);
+
+        //Set the position of the light
+        const lightPos = vec3.transformMat4([], this.worldLightPos, this.viewMatrix);
+        gl.uniform3fv(gl.getUniformLocation(wireShader.programId, 'lightPosition'), lightPos);
+
         this.drawScene(gl, wireShader);
 
         // Draw the grid using flatShader
         flatShader.use(gl);
         this.setMatrices(gl, flatShader);
         this.grid.render(gl, flatShader);
+
+        
     }
 
     /**
@@ -118,11 +127,8 @@ export class Scene {
         // Only do this in "fly" mode.
         if( this.mode !== "fly" ) return;
 
-        // TODO: Part 2
-        // Use this.controls.keyDown() to determine which keys are pressed, and 
-        // move the camera based on the results.
         // See: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code
-        // for details on key codes.
+      
 
         if (this.controls.keyDown("KeyW")){
             this.camera.dolly(-.03);
@@ -153,13 +159,6 @@ export class Scene {
      * @param {ShaderProgram} shader the shader program
      */
     drawScene(gl, shader) {
-
-        // TODO: Part 1
-        // The code below draws an example scene consisting of just one box and 
-        // a cow.  This is intended as an example only.  Replace with a scene of
-        // your own design!  If you want to use other meshes, load them in the constructor
-        // above.  See the constructor for an example of how to load an OBJ file.
-        // Set up the transformation
         mat4.identity(this.modelMatrix);
         mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 1.5, [1,0,0]);
         mat4.scale(this.modelMatrix, this.modelMatrix, [10, 10, 0]);
@@ -226,9 +225,6 @@ export class Scene {
      * Sets this.projMatrix to the appropriate projection matrix.
      */
     setProjectionMatrix() {
-        // TODO: Part 3
-        // Set the projection matrix to the appropriate matrix based on this.projType.  
-        // Currently, uses a perspective projection only.
         const aspect = this.width / this.height;
         if (this.projType === 'perspective'){
             mat4.perspective(this.projMatrix, glMatrix.toRadian(45.0), aspect, 0.5, 1000.0);
@@ -245,9 +241,6 @@ export class Scene {
      * @param {Number} deltaY change in the mouse's y coordinate
      */
     leftDrag( deltaX, deltaY ) { 
-        // TODO: Part 2
-        // Implement this method.
-
         if (this.mode === 'mouse'){
             let xScale = deltaX * 0.001;
             let yScale = deltaY * 0.001;
@@ -270,9 +263,6 @@ export class Scene {
      * @param {Number} deltaY change in the mouse's y coordinate
      */
     shiftLeftDrag( deltaX, deltaY ) {
-        // TODO: Part 2
-        // Implement this method
-
         this.camera.track(-deltaX * 0.003, deltaY * 0.003);
         this.camera.getViewMatrix(this.viewMatrix);
     }

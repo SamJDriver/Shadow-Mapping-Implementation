@@ -64,7 +64,7 @@ precision highp float;
 #define NUM_LIGHTS 1
 
 uniform vec3 lightColors[ NUM_LIGHTS ];
-uniform vec3 lightPositions[ NUM_LIGHTS ]; // in eye space
+uniform vec3 lightPosition; // in eye space
 
 uniform float exposure;
 uniform float roughness;
@@ -90,24 +90,16 @@ out vec4 fragColor;
 // uniform vec3 uEdgeColor;
   
 void main() {
-    // vec3 color = vec3(1,0,0);
-    // if( gl_FrontFacing ) {
-    //     color = uColor;
-    // }
-    // fragColor = vec4( mix(uEdgeColor, color, gf), 1);
-
     vec3 n   = normalize(fNormal);     // Normal (eye coords)
     vec3 wo  = normalize(-fPosition);  // Towards eye (eye coords)
     
     vec3 finalColor = vec3(0,0,0);
     for (int i = 0; i < NUM_LIGHTS; i++) {
-        vec3 wi = vec3(3,3,0) - fPosition;  
+        vec3 wi = lightPosition - fPosition;  
         float r = length(wi);         // Dist. to light
         wi = normalize(wi);           // Unit vector towards light
         vec3 h = normalize(wi + wo);  // "Halfway" vector
 
-        // Diffuse reflectance is taken from the texture, and converted to linear color space
-        //vec3 kd = from_sRGB(texture(diffuseTexture, fUv).rgb);
         vec3 kd =  vec3(0.142400, 0.051570, 0.023390);
         
         // Diffuse component
@@ -117,7 +109,7 @@ void main() {
         // Specular component
         vec3 spec = vec3( pow(max(dot(n, h), 0.0), 225.000000) * vec3(0.076000, 0.076000, 0.076000) );
 
-        finalColor += (vec3(1.0,1.0,1.0)) * (diff + spec);
+        finalColor += (vec3(1.0,1.0,1.0) / (r*r)) * (diff + spec);
     }
     
     // Only shade if facing the light

@@ -89,9 +89,9 @@ export class Camera {
         // y-axis by horizAngle.
 
         //Set up the matrix
+        //Verticle
         let m = mat4.create();
         mat4.rotate(m, m, vertAngle, this.u);
-        mat4.rotate(m, m, horizAngle, [0,1,0]);
 
         //Rotate the camera's position
         vec3.transformMat4(this.eye, this.eye, m);
@@ -101,6 +101,19 @@ export class Camera {
         vec3.transformMat4(this.v, this.v, m);
         //Rotate w
         vec3.transformMat4(this.w, this.w, m);
+
+        //Horizontal
+        m = mat4.create();
+        mat4.rotate(m, m, horizAngle, [0,1,0]);
+        //Rotate the camera's position
+        vec3.transformMat4(this.eye, this.eye, m);
+        //Rotate u
+        vec3.transformMat4(this.u, this.u, m);
+        //Rotate v
+        vec3.transformMat4(this.v, this.v, m);
+        //Rotate w
+        vec3.transformMat4(this.w, this.w, m);
+
     }
 
     /**
