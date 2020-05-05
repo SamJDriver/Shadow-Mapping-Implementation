@@ -85,7 +85,6 @@ vec3 from_sRGB(vec3 c) { return pow(c, vec3(2.2)); }
 
 out vec4 fragColor;
 
-
 // uniform vec3 uColor;
 // uniform vec3 uEdgeColor;
   
@@ -99,15 +98,12 @@ void main() {
         float r = length(wi);         // Dist. to light
         wi = normalize(wi);           // Unit vector towards light
         vec3 h = normalize(wi + wo);  // "Halfway" vector
-
-        vec3 kd =  vec3(0.142400, 0.051570, 0.023390);
         
         // Diffuse component
-        vec3 diff = kd * max(dot(n, wi), 0.0);
-
+        vec3 diff = Kd * max(dot(n, wi), 0.0);
 
         // Specular component
-        vec3 spec = vec3( pow(max(dot(n, h), 0.0), 225.000000) * vec3(0.076000, 0.076000, 0.076000) );
+        vec3 spec = vec3( pow(max(dot(n, h), 0.0), Ns) * Ks );
 
         finalColor += (vec3(1.0,1.0,1.0) / (r*r)) * (diff + spec);
     }
@@ -115,9 +111,9 @@ void main() {
     // Only shade if facing the light
     // Color the back faces an identifiable color
     if (gl_FrontFacing) {
-       fragColor = vec4(to_sRGB(finalColor), 1.0); 
+       fragColor = vec4(to_sRGB(finalColor * 200.00), 1.0); 
     } else {
-        fragColor = vec4(0.0, 0.7, 0.0, 1.0); 
+        fragColor = vec4(Ka, 1.0); 
     }
 
 }`;

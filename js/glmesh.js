@@ -19,6 +19,8 @@ export class GLMesh {
         this.vao = null;
         this.buffers = [];
 
+        console.log(mesh);
+        
         this.build(gl, mesh);
     }
 
@@ -31,10 +33,22 @@ export class GLMesh {
     render(gl, shader) {
         // If the buffers haven't been initialized, do nothing
         if( this.vao === null ) return;
-
         // Bind to the VAO and draw the triangles
         gl.bindVertexArray(this.vao);
-        gl.drawElements( gl.TRIANGLES, this.indices.length, gl.UNSIGNED_INT, 0);
+
+        if (this.mesh.submeshes !== null){
+            for (var value in this.mesh.submeshes){
+                gl.uniform3fv(gl.getUniformLocation(shader.programId, 'Kd'), this.mesh.submeshes[value].Kd);
+                gl.uniform1f(gl.getUniformLocation(shader.programId, 'Ns'), this.mesh.submeshes[value].Ns);
+                gl.uniform3fv(gl.getUniformLocation(shader.programId, 'Ks'), this.mesh.submeshes[value].Ks);
+                gl.uniform3fv(gl.getUniformLocation(shader.programId, 'Ka'), this.mesh.submeshes[value].Ka);
+
+                gl.drawElements(gl.TRIANGLES, this.mesh.submeshes[value].numVerts, gl.UNSIGNED_INT, this.mesh.submeshes[value].offset);
+            }
+        }
+        else
+            gl.drawElements( gl.TRIANGLES, this.indices.length, gl.UNSIGNED_INT, 0);
+
         gl.bindVertexArray(null);  // Un-bind the VAO
     }
 
@@ -57,7 +71,6 @@ export class GLMesh {
         if( mesh.uvs ) {
             this.uvs = [];
         }
-
         for (let i = 0; i < mesh.verts.length; i++) {
             let vert = mesh.verts[i];
             let vertKey = `${vert.p}:${'n' in vert ? vert.n : ''}:${'uv' in vert ? vert.uv : ''}`;

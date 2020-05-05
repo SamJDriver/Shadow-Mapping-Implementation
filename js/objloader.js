@@ -11,11 +11,18 @@ export function loadObjMesh(text) {
     const lines = text.split(/\r?\n/);
 
     // The mesh data
-    const objData = { points: [], normals: [], uvs: [], verts: [], bbox: new Aabb() };
+    const objData = { 
+        points: [], 
+        normals: [], 
+        uvs: [], 
+        verts: [],
+        submeshes: {},
+        bbox: new Aabb() };
+
+    let currentKey = null;
 
     for(let lineNum = 0; lineNum < lines.length; lineNum++) {
         let line = lines[lineNum];
-
         // Remove comments
         let commentLoc = line.indexOf("#");
         if( commentLoc >= 0 ) {
@@ -36,22 +43,71 @@ export function loadObjMesh(text) {
                 objData.normals.push( [parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2])] );
             } else if (command === "vt") {
                 objData.uvs.push( [parseFloat(parts[0]), parseFloat(parts[1])] );
-            } else if (command === "f") {
-                let startVert = parseVertex(parts[0], objData);
-                for (let i = 2; i < parts.length; i++) {  // Triangulate
-                    objData.verts.push(startVert);
-                    let v1 = parseVertex(parts[i-1], objData);
-                    objData.verts.push(v1);
-                    let v2 = parseVertex(parts[i], objData);
-                    objData.verts.push(v2);
-                }
             } else if (command === "usemtl"){
                 //groups of vertices rather than one big group
                 //map of vertices key as text after usemtl value is list of vertices
-                console.log("test");
-            }
-
+                let key = parts;
+                currentKey = key;
+                //Create a new object in submesh
+                if (objData.submeshes[key] == null){
+                    objData.submeshes[key] = {};
+                    objData.submeshes[key]['verts'] = [];
+                    objData.submeshes[key]['numVerts'] = 0;
+                    objData.submeshes[key]['offset'] = 0;
+                }
+            } else if (command === "newmtl"){
+                //Just need to set the currentKey for the mtl file data
+                //Since the submesh should have already been created in usemtl
+                let key = parts;
+                currentKey = key;
+            } else if (command === "Ns") {
+                let f = parseFloat(parts);
+                if (currentKey !== null)
+                    objData.submeshes[currentKey]['Ns'] = f;
+            } else if (command === "Ka") {
+                let temp = [parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2])]
+                if (currentKey !== null)
+                    objData.submeshes[currentKey]['Ka'] = temp;
+            } else if (command === "Kd") {
+                let temp = [parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2])]
+                if (currentKey !== null)
+                    objData.submeshes[currentKey]['Kd'] = temp;
+            } else if (command === "Ks") {
+                let temp = [parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2])]
+                if (currentKey !== null)
+                    objData.submeshes[currentKey]['Ks'] = temp;
+            } else if (command === "d") {
+                let f = parseFloat(parts);
+                if (currentKey !== null)
+                    objData.submeshes[currentKey]['d'] = f;
+            } else if (command === "f") {
+                let startVert = parseVertex(parts[0], objData);
+                for (let i = 2; i < parts.length; i++) {  // Triangulate
+                    objData.submeshes[currentKey].verts.push(startVert);
+                    let v1 = parseVertex(parts[i-1], objData);
+                    objData.submeshes[currentKey].verts.push(v1);
+                    let v2 = parseVertex(parts[i], objData);
+                    objData.submeshes[currentKey].verts.push(v2);
+                    objData.submeshes[currentKey].numVerts += 3;
+                }
+            } 
         }
+    }
+
+    let offset = 0;
+    let count = 0;
+    for (var key in objData.submeshes) {
+        if (count === 0){
+            objData.submeshes[key].offset = 0;
+        }
+        else {
+            objData.submeshes[key].offset = offset;
+        }
+        for (let vert of objData.submeshes[key].verts){
+            objData.verts.push(vert);
+            offset += 4;
+        }
+        count++;
     }
 
     // The ObjMesh

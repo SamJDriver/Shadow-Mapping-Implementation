@@ -28,7 +28,7 @@ function main() {
     flatShader = ShaderProgram.compile(gl, ShaderCode.FLAT_VERT, ShaderCode.FLAT_FRAG);
 
     window.addEventListener('resize', resize);
-    scene = new Scene(gl, canvas);
+    scene = new Scene(gl, canvas, wireShader);
     
     resize();
     startAnimation();

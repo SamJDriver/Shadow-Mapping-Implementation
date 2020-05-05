@@ -10,7 +10,6 @@ import { Controls } from './controls.js';
 import { loadObjMesh } from './objloader.js';
 import * as vec3 from './gl-matrix/vec3.js';
 import { GLMesh } from './glmesh.js';
-
 import * as glMatrix from './gl-matrix/common.js';
 import * as mat4 from "./gl-matrix/mat4.js";
 import { makeGround } from "./ground.js";
@@ -26,7 +25,7 @@ export class Scene {
      * @param {WebGL2RenderingContext} gl 
      * @param {HTMLElement} canvas the canvas element 
      */
-    constructor(gl, canvas) {
+    constructor(gl, canvas, shader) {
         this.canvas = canvas;
         this.width = canvas.width;
         this.height = canvas.height;
@@ -47,19 +46,29 @@ export class Scene {
         this.mode = "mouse";
 
         // UI manager object
-        this.controls = new Controls(this.canvas, this);
+        this.controls = new Controls(this.canvas, this, gl, shader);
         
         // Create the meshes for the scene
         this.grid = new Grid(gl);   // The reference grid
-        //this.ground = new GLMesh(gl, makeGround());
+        this.ground = new GLMesh(gl, makeGround());
 
         //The position of the light in world coordinates
-        this.worldLightPos = [2, 2, 0];
+        this.worldLightPos = [0, 15, -5];
 
-        // Load the trunk from an OBJ file.  Caution: the fetch method is 
+        // Load the obj from an OBJ file.  Caution: the fetch method is 
         // asynchronous, so the mesh will not be immediately available.  
         // Make sure to check for null before rendering.  Use this as an example
         // to load other OBJ files.
+        this.t1Green = null;
+        fetch('obj2/t3-green.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.t1Green = new GLMesh(gl, objMesh);
+            });
+
         this.trunk = null;
         fetch('obj2/dead1.obj')
             .then( (response) => {
@@ -67,13 +76,10 @@ export class Scene {
             })
             .then( (text) => {
                 let objMesh = loadObjMesh(text);
-                console.log(objMesh);
                 this.trunk = new GLMesh(gl, objMesh);
-                //glmesh from pa5 
             });
 
     }
-
 
     /**
      * A convenience method to set all three matrices in the shader program.
@@ -115,8 +121,6 @@ export class Scene {
         flatShader.use(gl);
         this.setMatrices(gl, flatShader);
         this.grid.render(gl, flatShader);
-
-        
     }
 
     /**
@@ -161,48 +165,40 @@ export class Scene {
     drawScene(gl, shader) {
         mat4.identity(this.modelMatrix);
         mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 1.5, [1,0,0]);
-        mat4.scale(this.modelMatrix, this.modelMatrix, [10, 10, 0]);
 
         // Set the model matrix in the shader
+        this.setDesiredUniforms(gl, shader, [0.172285, 0.389000, 0.026521], 225.00, [0,0,0], [1,1,1]);
         gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
-        gl.uniform3f( shader.uniform('uColor'), 0.52, 0.52, 0.52);
+        this.ground.render(gl, shader);
 
-        if(this.trunk !== null) {
-            // Set up the cow's transformation
+        if(this.t1Green !== null) {
             mat4.identity(this.modelMatrix);
-            mat4.translate(this.modelMatrix, this.modelMatrix, [0.0, 3, 0.0]);
-            //mat4.scale(this.modelMatrix, this.modelMatrix, [0.1, 0.1, 0.1]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-52.0, 15, 0.0]);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [5, 5, 5]);
             // Set the model matrix in the shader
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
-            gl.uniform3fv(shader.uniform('Kd'), vec3.create(0.310813, 0.061869, 0.018581) );
-            //gl.uniform1f()
-        
-            // Set the color in the shader
 
-
-            // Draw the trunk
-            this.trunk.render(gl, shader);
+            this.t1Green.render(gl, shader);
         }
 
+        if(this.trunk !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [5, 5, 5]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [0,2.1, 0.0]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+
+            this.trunk.render(gl, shader);
+        }
         // Reset the model matrix to the identity
         mat4.identity(this.modelMatrix);
+    }
 
-        // if(this.raptor !== null) {
-        //     // Set up the raptor's transformation
-        //     mat4.identity(this.modelMatrix);
-        //     mat4.translate(this.modelMatrix, this.modelMatrix, [0.0, 1.787, 5.2]);
-        //     mat4.rotateX(this.modelMatrix, this.modelMatrix, Math.PI/12)            
-        //     mat4.scale(this.modelMatrix, this.modelMatrix, [0.2, 0.2, 0.2]);
-        //     // Set the model matrix in the shader
-        //     gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
-        //     // Set the color in the shader
-        //     gl.uniform3f( shader.uniform('uColor'), 0.30196, 0.411764, 0.1647058);
-        //     // Draw the raptor
-        //     this.raptor.render(gl, shader);
-        // }
-        // Reset the model matrix to the identity
-        mat4.identity(this.modelMatrix);
-
+    setDesiredUniforms(gl, shader, Kd, Ns, Ks, Ka){
+        gl.uniform3fv(gl.getUniformLocation(shader.programId, 'Kd'), Kd);
+        gl.uniform1f(gl.getUniformLocation(shader.programId, 'Ns'), Ns);
+        gl.uniform3fv(gl.getUniformLocation(shader.programId, 'Ks'), Ks);
+        gl.uniform3fv(gl.getUniformLocation(shader.programId, 'Ka'), Ka);
     }
 
     /**

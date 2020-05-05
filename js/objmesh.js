@@ -42,6 +42,11 @@ export class ObjMesh {
         } else {
             this.bbox = null;
         }
+        
+        if ('submeshes' in data)
+            this.submeshes = data.submeshes;
+        else
+            this.submeshes = null;
 
         if( 'verts' in data ) {
             this.verts = data.verts;
