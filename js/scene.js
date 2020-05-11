@@ -13,6 +13,7 @@ import { GLMesh } from './glmesh.js';
 import * as glMatrix from './gl-matrix/common.js';
 import * as mat4 from "./gl-matrix/mat4.js";
 import { makeGround } from "./ground.js";
+import { ShadowMap } from './ShadowMap.js';
 
 /**
  * Represents the entire scene.
@@ -52,21 +53,28 @@ export class Scene {
         this.grid = new Grid(gl);   // The reference grid
         this.ground = new GLMesh(gl, makeGround());
 
-        //The position of the light in world coordinates
-        this.worldLightPos = [0, 15, -5];
+        //The Shadow Map object
+        this.shadowMap = new ShadowMap(gl);
 
+        //The position of the light in world coordinates
+        this.worldLightPos = [0, 500, 0];
+
+        this.loadObj(gl);
+    }
+
+    loadObj(gl){
         // Load the obj from an OBJ file.  Caution: the fetch method is 
         // asynchronous, so the mesh will not be immediately available.  
         // Make sure to check for null before rendering.  Use this as an example
         // to load other OBJ files.
-        this.t1Green = null;
+        this.t3Green = null;
         fetch('obj2/t3-green.obj')
             .then( (response) => {
                 return response.text();
             })
             .then( (text) => {
                 let objMesh = loadObjMesh(text);
-                this.t1Green = new GLMesh(gl, objMesh);
+                this.t3Green = new GLMesh(gl, objMesh);
             });
 
         this.trunk = null;
@@ -78,7 +86,155 @@ export class Scene {
                 let objMesh = loadObjMesh(text);
                 this.trunk = new GLMesh(gl, objMesh);
             });
+        
+        this.dead3 = null;
+        fetch('obj2/dead3.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.dead3 = new GLMesh(gl, objMesh);
+            });
 
+        this.trunk2 = null;
+        fetch('obj2/trunk.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.trunk2 = new GLMesh(gl, objMesh);
+            });
+
+        this.land1 = null;
+        fetch('obj2/L1.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.land1 = new GLMesh(gl, objMesh);
+            });
+        
+        this.land2 = null;
+        fetch('obj2/L2.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.land2 = new GLMesh(gl, objMesh);
+            });
+
+        this.t2orange = null;
+        fetch('obj2/t2-orange.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.t2orange = new GLMesh(gl, objMesh);
+            });
+
+        this.t1Green = null;
+        fetch('obj2/t1-green.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.t1Green = new GLMesh(gl, objMesh);
+            });
+
+        this.t4Green = null;
+        fetch('obj2/t4-green.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.t4Green = new GLMesh(gl, objMesh);
+            });
+        
+        this.t4Cyan = null;
+        fetch('obj2/t4-cyan.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.t4Cyan = new GLMesh(gl, objMesh);
+            });
+
+        this.t7Purple = null;
+        fetch('obj2/t7-purple.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.t7Purple = new GLMesh(gl, objMesh);
+            });
+        this.t2Yellow = null;
+        fetch('obj2/t2-yellow.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.t2Yellow = new GLMesh(gl, objMesh);
+            });
+        this.rock9 = null;
+        fetch('obj2/r9.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.rock9 = new GLMesh(gl, objMesh);
+            });
+        this.rock5 = null;
+        fetch('obj2/r5.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.rock5 = new GLMesh(gl, objMesh);
+            });
+
+        this.g7Green = null;
+        fetch('obj2/g7-green.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.g7Green = new GLMesh(gl, objMesh);
+            });
+            
+        this.f4 = null;
+        fetch('obj2/f4.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.f4 = new GLMesh(gl, objMesh);
+            });
+
+        this.p1Green = null;
+        fetch('obj2/p1-green.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.p1Green = new GLMesh(gl, objMesh);
+            });
+
+        
     }
 
     /**
@@ -135,22 +291,22 @@ export class Scene {
       
 
         if (this.controls.keyDown("KeyW")){
-            this.camera.dolly(-.03);
+            this.camera.dolly(-1);
         }
         if (this.controls.keyDown("KeyA")){
-            this.camera.track(-.03, 0);
+            this.camera.track(-1, 0);
         }
         if (this.controls.keyDown("KeyS")){
-            this.camera.dolly(.03);
+            this.camera.dolly(1);
         }
         if (this.controls.keyDown("KeyD")){
-            this.camera.track(.03, 0);
+            this.camera.track(1, 0);
         }
         if (this.controls.keyDown("KeyQ")){
-            this.camera.track(0, .03);
+            this.camera.track(0, 1);
         }
         if (this.controls.keyDown("KeyE")){
-            this.camera.track(0, -.03);
+            this.camera.track(0, -1);
         }
 
         this.camera.getViewMatrix(this.viewMatrix);
@@ -171,24 +327,192 @@ export class Scene {
         gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
         this.ground.render(gl, shader);
 
+        //Green Tree 1
         if(this.t1Green !== null) {
             mat4.identity(this.modelMatrix);
-            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
-            mat4.translate(this.modelMatrix, this.modelMatrix, [-52.0, 15, 0.0]);
-            mat4.scale(this.modelMatrix, this.modelMatrix, [5, 5, 5]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [85, 83, -230]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/30, [1,0,0])
+            mat4.scale(this.modelMatrix, this.modelMatrix, [30, 30, 30]);
+
             // Set the model matrix in the shader
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
 
             this.t1Green.render(gl, shader);
         }
 
-        if(this.trunk !== null) {
+        //Green tree 3
+        if(this.t3Green !== null) {
             mat4.identity(this.modelMatrix);
-            mat4.scale(this.modelMatrix, this.modelMatrix, [5, 5, 5]);
-            mat4.translate(this.modelMatrix, this.modelMatrix, [0,2.1, 0.0]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-300, 55, 300]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
+            mat4.scale(this.modelMatrix, this.modelMatrix, [20, 20, 20]);
+
+            // Set the model matrix in the shader
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
 
+            this.t3Green.render(gl, shader);
+        }
+
+        //Green Tree 4
+        if(this.t4Green !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-340, 227, 150]);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [20, 20, 20]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.t4Green.render(gl, shader);
+        }
+
+        if (this.t4Cyan !== null){
+            mat4.identity(this.modelMatrix);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-300, 227, 50]);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [20, 20, 20]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/30, [1,0,0])
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.t4Cyan.render(gl, shader);
+        }
+
+        //Orange tree
+        if(this.t2orange !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [0, 105, -300]);
+            //mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
+            mat4.scale(this.modelMatrix, this.modelMatrix, [20, 20, 20]);
+
+            // Set the model matrix in the shader
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+
+            this.t2orange.render(gl, shader);
+        }
+
+        //Purple tree
+        if(this.t7Purple !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-150, 57.5, 350]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
+            mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.t7Purple.render(gl, shader);
+        }
+
+        //Yellow tree
+        if(this.t2Yellow !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-200, 132, 450]);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.t2Yellow.render(gl, shader);
+        }
+
+        //Dead stump
+        if(this.trunk !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [10, 2.1, 15]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.trunk.render(gl, shader);
+        }
+
+        if(this.dead3 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-6, 1.8, 8]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+
+            this.dead3.render(gl, shader);
+        }
+
+        //Tree trunk
+        if(this.trunk2 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-13.5, 2.5, -2]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/5, [1, 0, 0]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+
+            this.trunk2.render(gl, shader);
+        }
+
+        //Rocky Hill1
+        if(this.land1 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [15, 15, 15]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-25, 5.0, 5.0]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/6, [0, 1, 0]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.land1.render(gl, shader);
+
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [13, 13, 13]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-15, 4.3, 5.0]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/8, [0, 0, 1]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/6, [0, 1, 0]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.land1.render(gl, shader);
+
+        }
+
+        if(this.land2 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [15, 15, 15]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [0, 15.0, 25.0]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.land2.render(gl, shader);
+        }
+
+        //Land Decorations
+        if(this.rock9 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [5, 5, 5]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-50, 19, 6]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.rock9.render(gl, shader);
+        }
+        if(this.rock5 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [5, 5, 5]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-60, 20, 20]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.rock5.render(gl, shader);
+        }
+        if(this.p1Green !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [9, 9, 9]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-30, 10.8, 18]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.p1Green.render(gl, shader);
+        }
+        if(this.f4 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [7, 7, 7]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-30, 0, -10]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.f4.render(gl, shader);
+        }
+        if(this.g7Green !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [15, 15, 15]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-16.5, 6.5, 8]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.g7Green.render(gl, shader);
+
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [15, 15, 15]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-17, 6.5, 6]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.g7Green.render(gl, shader);
+
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [15, 15, 15]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-20, 6.5, 1]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.g7Green.render(gl, shader);
+
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [15, 15, 15]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-20, 6.5, 1]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.g7Green.render(gl, shader);
         }
         // Reset the model matrix to the identity
         mat4.identity(this.modelMatrix);
@@ -243,8 +567,8 @@ export class Scene {
             this.camera.orbit(-xScale, -yScale);
         }
         else if (this.mode === 'fly'){
-            let xScale = deltaX * 0.0005;
-            let yScale = deltaY * 0.0005;
+            let xScale = deltaX * 0.001;
+            let yScale = deltaY * 0.001;
             this.camera.turn(-xScale, -yScale);
         }
         this.camera.getViewMatrix(this.viewMatrix);
@@ -282,7 +606,7 @@ export class Scene {
      */
     resetCamera() {
         // Set the camera's default position/orientation
-        this.camera.orient([0,1,3], [0,0,0], [0,1,0]);
+        this.camera.orient([50,25,3], [0,20,0], [0,1,0]);
         // Retrieve the new view matrix
         this.camera.getViewMatrix(this.viewMatrix);
     }

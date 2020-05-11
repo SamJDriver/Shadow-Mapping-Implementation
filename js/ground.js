@@ -6,13 +6,13 @@ import {ObjMesh} from './objmesh.js';
  * @param {Number} sideLength the length of a side of the cube
  * @returns {ObjMesh} the mesh
  */
-export function makeGround( sideLength = 100 ) {
+export function makeGround( sideLength = 1000 ) {
     const sl2 = sideLength / 2.0;
 
     const objData = {
         points: [ [-sl2, -sl2, 0], [sl2, -sl2, 0], [sl2, sl2, 0], [-sl2, sl2, 0] ],
         normals: [
-         [0, 1, 0]
+         [0, 0, 1]
         ],
         uvs: [
             [0, 0], [1, 0], [1, 1], [0, 1],

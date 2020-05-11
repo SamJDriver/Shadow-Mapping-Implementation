@@ -19,8 +19,6 @@ export class GLMesh {
         this.vao = null;
         this.buffers = [];
 
-        console.log(mesh);
-        
         this.build(gl, mesh);
     }
 
@@ -46,8 +44,9 @@ export class GLMesh {
                 gl.drawElements(gl.TRIANGLES, this.mesh.submeshes[value].numVerts, gl.UNSIGNED_INT, this.mesh.submeshes[value].offset);
             }
         }
-        else
+        else{
             gl.drawElements( gl.TRIANGLES, this.indices.length, gl.UNSIGNED_INT, 0);
+        }
 
         gl.bindVertexArray(null);  // Un-bind the VAO
     }

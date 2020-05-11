@@ -89,7 +89,7 @@ export class Camera {
         // y-axis by horizAngle.
 
         //Set up the matrix
-        //Verticle
+        //Vertical
         let m = mat4.create();
         mat4.rotate(m, m, vertAngle, this.u);
 

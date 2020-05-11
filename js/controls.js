@@ -1,3 +1,4 @@
+import {SliderControl} from './slider-control.js';
 /**
  * Manages the event listeners for keyboard, mouse and DOM events.
  */
@@ -10,11 +11,15 @@ export class Controls {
      * @param {DOMElement} canvas the canvas element 
      * @param {Scene} scene the Scene object 
      */
-    constructor(canvas, scene) {
+    constructor(canvas, scene, gl, shader) {
         this.canvas = canvas;
         this.scene = scene;
         this.mousePrevious = null;
         this.downKeys = new Set();
+
+        const initExposure = 250000.0;
+
+        const groupEl = document.getElementById('main-group');
 
         // Keyboard listeners
         document.addEventListener("keydown", (e) => {
@@ -52,6 +57,25 @@ export class Controls {
 
         document.getElementById('mouse-mode-rb').addEventListener('change', (e) => this.modeChange(e));
         document.getElementById('fly-mode-rb').addEventListener('change', (e) => this.modeChange(e));
+
+
+        shader.use(gl);
+        gl.uniform1f(shader.uniform('exposure'), initExposure);
+
+        this.exposureSlider = new SliderControl( "Exposure:", "exposure-slider", groupEl, 
+            {min: 5.0, max: 25.0, initial: Math.log2(initExposure), precision: 1,
+            valueFn: (v) => Math.pow(2, v) });
+        this.exposureSlider.addInputListener( (e) => {
+            const v = Math.pow(2, e.target.value);
+            shader.use(gl);
+            gl.uniform1f(shader.uniform('exposure'), v);
+            this.update();
+        });
+        
+    }
+
+    update() {
+        this.canvas.dispatchEvent(new Event('repaint'));
     }
 
     /**

@@ -9,7 +9,7 @@
  * @param {Float32Array or vec3} color the color to draw the grid.
  */
 export class Grid {
-    constructor( gl, size = 100, divs = 20, color = [0.3,0.3,0.3] ) {
+    constructor( gl, size = 1000, divs = 20, color = [0.3,0.3,0.3] ) {
         divs = Math.round(divs);
         if( divs <= 0 ) throw new Error("Invalid number of divisions: " + divs);
         if( divs % 2 != 0 ) divs += 1;  // Make it even
