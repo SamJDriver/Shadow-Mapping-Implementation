@@ -117,11 +117,12 @@ void main() {
     // Only shade if facing the light
     // Color the back faces an identifiable color
     if (gl_FrontFacing) {
-       fragColor = vec4(to_sRGB(finalColor * exposure), 1.0); 
+        fragColor = vec4(to_sRGB(finalColor * exposure), 1.0); 
+       
     } else {
         fragColor = vec4(0.0, 0.0, 0.0, 1.0); 
     }
 
-    fragColor = vec4(gray, gray, gray, 1.0);
+    fragColor = vec4(gray, gray, gray, 0.0);
 
 }`;

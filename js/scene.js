@@ -248,8 +248,6 @@ export class Scene {
         gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
         gl.uniformMatrix4fv(shader.uniform('uView'), false, this.viewMatrix);
         gl.uniformMatrix4fv(shader.uniform('uProj'), false, this.projMatrix);
-        gl.uniformMatrix4fv(shader.uniform('uTextureMatrix'), false, this.modelMatrix);
-
     }
 
     /**
@@ -293,7 +291,7 @@ export class Scene {
         gl.uniformMatrix4fv(wireShader.uniform('shadowMatrix'), false, this.shadowMap.getShadowMatrix(this.width, this.height));
         this.drawScene(gl, wireShader, true);
 
-        // Draw the grid using flatShader
+        //Draw the grid using flatShader
         flatShader.use(gl);
         this.setMatrices(gl, flatShader);
         this.grid.render(gl, flatShader);
@@ -343,7 +341,7 @@ export class Scene {
 
         if (b){
             //Drawing the ground
-            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 1.5, [1,0,0]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * -0.5, [1,0,0]);
             this.setDesiredUniforms(gl, shader, [0.172285, 0.389000, 0.026521], 225.00, [0,0,0], [1,1,1]);
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.ground.render(gl, shader);

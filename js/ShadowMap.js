@@ -13,9 +13,14 @@ export class ShadowMap {
         this.u = [1,0,0];
         this.v = [0,1,0];
         this.w = [0,0,1];
+        this.orient(this.worldLightPos, [0,0,0], [1,0,0]);
 
         this.rotation = mat4.create();
         this.translation = mat4.create();
+        //store depth value to plane 
+        //depth is same as point 
+        //when theyre actually equal due to precision floating point limit > sometimes bigger sometimes smaller
+        //turn on front face culling in shadow pass
 
         //Creating and binding depth buffer texture
         this.depthTexture = gl.createTexture();
@@ -47,7 +52,6 @@ export class ShadowMap {
             gl.TEXTURE_2D,
             this.depthTexture, 0);
 
-        this.orient(this.worldLightPos, [0,0,0], [-1,0,0]);
     }
 
     orient( eye, at, up ) {
@@ -86,7 +90,7 @@ export class ShadowMap {
         return mat4.multiply([], this.rotation, this.translation);
     }
 
-    getShadowMatrix(width, height){
+    getShadowMatrix(){
         //treat light as camera
         //1.transform into light's camera coords
         //2. transform into light's clip coords > zcoord is pseudo depth < comes from pos of the point we're shading in 2nd pass comes from mesh
@@ -97,11 +101,11 @@ export class ShadowMap {
         matView = this.getLightMatrix();
 
         var matProj = mat4.create();
-        matProj = this.getProjectionMatrix(width, height);
+        matProj = this.getProjectionMatrix();
 
         var matBias = mat4.create();
-        matBias = mat4.translate(matBias, matBias, [0.5, 0.5, 0.5]);
-        matBias = mat4.scale(matBias, matBias, [0.5, 0.5, 0.5]);
+        mat4.translate(matBias, matBias, [0.5, 0.5, 0.5]);
+        mat4.scale(matBias, matBias, [0.5, 0.5, 0.5]);
 
         var matFinal = mat4.create();
         mat4.multiply(matFinal, matFinal, matBias); //3
@@ -111,9 +115,8 @@ export class ShadowMap {
         return matFinal;
     }
 
-    getProjectionMatrix(width, height){
-        const aspect = width/height;
-        var proj = mat4.create();
-        return mat4.perspective(proj, glMatrix.toRadian(45.0), aspect, 0.5, 10000.0);
+    getProjectionMatrix(){
+        const aspect = 1;
+        return mat4.perspective([], glMatrix.toRadian(45.0), aspect, 0.5, 10000.0);
     }
 }
