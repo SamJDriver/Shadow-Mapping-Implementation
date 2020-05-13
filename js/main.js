@@ -1,13 +1,15 @@
 import * as ShaderCode from './shader_code.js';
 import { ShaderProgram } from './shader.js';
 import { Scene } from './scene.js';
+import * as DepthShaders from './shader_depth.js';
 
 import * as glMatrix from './gl-matrix/common.js';
 
 let gl = null;           // The WebGL context object
 let canvas = null;       // The canvas element
 let flatShader = null;   // The shader program for the grid
-let wireShader = null;   // The shader program for the
+let wireShader = null;   // The shader program for the objects
+let shadowShader = null; //The shader program for the depth buffer
 let scene = null;        // The scene
 
 window.addEventListener("load", main);
@@ -26,9 +28,11 @@ function main() {
     // Compile/link shader programs
     wireShader = ShaderProgram.compile(gl, ShaderCode.FLAT_WIRE_VERT, ShaderCode.FLAT_WIRE_FRAG);
     flatShader = ShaderProgram.compile(gl, ShaderCode.FLAT_VERT, ShaderCode.FLAT_FRAG);
+    shadowShader = ShaderProgram.compile(gl, DepthShaders.DEPTH_VERT, DepthShaders.DEPTH_FRAG);
+
 
     window.addEventListener('resize', resize);
-    scene = new Scene(gl, canvas, wireShader);
+    scene = new Scene(gl, canvas, wireShader, shadowShader);
     
     resize();
     startAnimation();
@@ -70,5 +74,5 @@ function draw(t) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // Draw the scene
-    scene.render(t, gl, wireShader, flatShader);
+    scene.render(t, gl, wireShader, flatShader, shadowShader);
 }

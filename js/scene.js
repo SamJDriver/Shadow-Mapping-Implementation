@@ -26,10 +26,12 @@ export class Scene {
      * @param {WebGL2RenderingContext} gl 
      * @param {HTMLElement} canvas the canvas element 
      */
-    constructor(gl, canvas, shader) {
+    constructor(gl, canvas, shader, depthShader) {
         this.canvas = canvas;
         this.width = canvas.width;
         this.height = canvas.height;
+        this.shader = shader;
+        this.depthShader = depthShader;
 
         // Variables used to store the model, view and projection matrices.
         this.modelMatrix = mat4.create();
@@ -55,9 +57,6 @@ export class Scene {
 
         //The Shadow Map object
         this.shadowMap = new ShadowMap(gl);
-
-        //The position of the light in world coordinates
-        this.worldLightPos = [0, 500, 0];
 
         this.loadObj(gl);
     }
@@ -249,6 +248,8 @@ export class Scene {
         gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
         gl.uniformMatrix4fv(shader.uniform('uView'), false, this.viewMatrix);
         gl.uniformMatrix4fv(shader.uniform('uProj'), false, this.projMatrix);
+        gl.uniformMatrix4fv(shader.uniform('uTextureMatrix'), false, this.modelMatrix);
+
     }
 
     /**
@@ -258,20 +259,39 @@ export class Scene {
      * @param {WebGL2RenderingContext} gl 
      * @param {ShaderProgram} wireShader the shader to use when drawing meshes 
      * @param {ShaderProgram} flatShader the shader to use when drawing the Grid
+     * @param {ShaderProgram} depthShader the shader to use when writing to the depth buffer
+
      */
-    render(time, gl, wireShader, flatShader) {
+    render(time, gl, wireShader, flatShader, depthShader) {
         
         this.pollKeys();
+
+        //Set the position of the light
+        const lightPos = vec3.transformMat4([], this.shadowMap.worldLightPos, this.viewMatrix);
+        gl.uniform3fv(gl.getUniformLocation(wireShader.programId, 'lightPosition'), lightPos);
+
+        //Populate the depth buffer
+        depthShader.use(gl);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowMap.depthFrameBuffer);
+        //Set the uniforms for the depth shader
+        gl.uniformMatrix4fv(depthShader.uniform('uModel'), false, this.modelMatrix);
+        gl.uniformMatrix4fv(depthShader.uniform('uView'), false, this.shadowMap.getLightMatrix());
+        gl.uniformMatrix4fv(depthShader.uniform('uProj'), false, this.shadowMap.getProjectionMatrix(this.width, this.height));
+        this.drawScene(gl, depthShader, false);
+
+        //Reset to using the default FRAMEBUFFER
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        //Select channel 0
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.shadowMap.depthTexture);
 
         // Draw the objects using wireShader
         wireShader.use(gl);
         this.setMatrices(gl, wireShader);
-
-        //Set the position of the light
-        const lightPos = vec3.transformMat4([], this.worldLightPos, this.viewMatrix);
-        gl.uniform3fv(gl.getUniformLocation(wireShader.programId, 'lightPosition'), lightPos);
-
-        this.drawScene(gl, wireShader);
+        gl.uniform1i(wireShader.uniform('depthTexture'), 0);
+        gl.uniformMatrix4fv(wireShader.uniform('shadowMatrix'), false, this.shadowMap.getShadowMatrix(this.width, this.height));
+        this.drawScene(gl, wireShader, true);
 
         // Draw the grid using flatShader
         flatShader.use(gl);
@@ -291,22 +311,22 @@ export class Scene {
       
 
         if (this.controls.keyDown("KeyW")){
-            this.camera.dolly(-1);
+            this.camera.dolly(-2);
         }
         if (this.controls.keyDown("KeyA")){
-            this.camera.track(-1, 0);
+            this.camera.track(-2, 0);
         }
         if (this.controls.keyDown("KeyS")){
-            this.camera.dolly(1);
+            this.camera.dolly(2);
         }
         if (this.controls.keyDown("KeyD")){
-            this.camera.track(1, 0);
+            this.camera.track(2, 0);
         }
         if (this.controls.keyDown("KeyQ")){
-            this.camera.track(0, 1);
+            this.camera.track(0, 2);
         }
         if (this.controls.keyDown("KeyE")){
-            this.camera.track(0, -1);
+            this.camera.track(0, -2);
         }
 
         this.camera.getViewMatrix(this.viewMatrix);
@@ -318,14 +338,16 @@ export class Scene {
      * @param {WebGL2RenderingContext} gl
      * @param {ShaderProgram} shader the shader program
      */
-    drawScene(gl, shader) {
+    drawScene(gl, shader, b) {
         mat4.identity(this.modelMatrix);
-        mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 1.5, [1,0,0]);
 
-        // Set the model matrix in the shader
-        this.setDesiredUniforms(gl, shader, [0.172285, 0.389000, 0.026521], 225.00, [0,0,0], [1,1,1]);
-        gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
-        this.ground.render(gl, shader);
+        if (b){
+            //Drawing the ground
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 1.5, [1,0,0]);
+            this.setDesiredUniforms(gl, shader, [0.172285, 0.389000, 0.026521], 225.00, [0,0,0], [1,1,1]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.ground.render(gl, shader);
+        }
 
         //Green Tree 1
         if(this.t1Green !== null) {
@@ -333,8 +355,6 @@ export class Scene {
             mat4.translate(this.modelMatrix, this.modelMatrix, [85, 83, -230]);
             mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/30, [1,0,0])
             mat4.scale(this.modelMatrix, this.modelMatrix, [30, 30, 30]);
-
-            // Set the model matrix in the shader
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
 
             this.t1Green.render(gl, shader);
@@ -346,8 +366,6 @@ export class Scene {
             mat4.translate(this.modelMatrix, this.modelMatrix, [-300, 55, 300]);
             mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
             mat4.scale(this.modelMatrix, this.modelMatrix, [20, 20, 20]);
-
-            // Set the model matrix in the shader
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
 
             this.t3Green.render(gl, shader);
@@ -377,8 +395,6 @@ export class Scene {
             mat4.translate(this.modelMatrix, this.modelMatrix, [0, 105, -300]);
             //mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
             mat4.scale(this.modelMatrix, this.modelMatrix, [20, 20, 20]);
-
-            // Set the model matrix in the shader
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
 
             this.t2orange.render(gl, shader);
@@ -454,8 +470,8 @@ export class Scene {
 
         if(this.land2 !== null) {
             mat4.identity(this.modelMatrix);
-            mat4.scale(this.modelMatrix, this.modelMatrix, [15, 15, 15]);
-            mat4.translate(this.modelMatrix, this.modelMatrix, [0, 15.0, 25.0]);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [10, 15, 10]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [20.0, 15.0, 25.0]);
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.land2.render(gl, shader);
         }
@@ -514,6 +530,7 @@ export class Scene {
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.g7Green.render(gl, shader);
         }
+
         // Reset the model matrix to the identity
         mat4.identity(this.modelMatrix);
     }
@@ -547,7 +564,7 @@ export class Scene {
     setProjectionMatrix() {
         const aspect = this.width / this.height;
         if (this.projType === 'perspective'){
-            mat4.perspective(this.projMatrix, glMatrix.toRadian(45.0), aspect, 0.5, 1000.0);
+            mat4.perspective(this.projMatrix, glMatrix.toRadian(45.0), aspect, 0.5, 3000.0);
         }else if(this.projType === 'orthographic'){
             mat4.ortho(this.projMatrix, -aspect, aspect, -1, 1, 0.5, 1000.0)
         }
@@ -596,7 +613,7 @@ export class Scene {
         // Update the camera by applying a "dolly" motion.  The amount should be
         // proportional to delta.
 
-        this.camera.dolly(delta * 0.1);
+        this.camera.dolly(delta * 2);
         this.camera.getViewMatrix(this.viewMatrix);
     }
 
