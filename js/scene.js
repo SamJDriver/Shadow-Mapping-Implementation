@@ -271,14 +271,23 @@ export class Scene {
         //Populate the depth buffer
         depthShader.use(gl);
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowMap.depthFrameBuffer);
+        gl.clear(gl.DEPTH_BUFFER_BIT);
+        gl.viewport(0,0,this.shadowMap.depthTextureSize, this.shadowMap.depthTextureSize);
         //Set the uniforms for the depth shader
         gl.uniformMatrix4fv(depthShader.uniform('uModel'), false, this.modelMatrix);
         gl.uniformMatrix4fv(depthShader.uniform('uView'), false, this.shadowMap.getLightMatrix());
         gl.uniformMatrix4fv(depthShader.uniform('uProj'), false, this.shadowMap.getProjectionMatrix(this.width, this.height));
-        this.drawScene(gl, depthShader, false);
+
+        gl.enable(gl.CULL_FACE);
+        gl.cullFace(gl.FRONT);
+
+
+        this.drawScene(gl, depthShader);
 
         //Reset to using the default FRAMEBUFFER
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.viewport(0,0,this.width, this.height);
 
         //Select channel 0
         gl.activeTexture(gl.TEXTURE0);
@@ -289,7 +298,11 @@ export class Scene {
         this.setMatrices(gl, wireShader);
         gl.uniform1i(wireShader.uniform('depthTexture'), 0);
         gl.uniformMatrix4fv(wireShader.uniform('shadowMatrix'), false, this.shadowMap.getShadowMatrix(this.width, this.height));
-        this.drawScene(gl, wireShader, true);
+
+        gl.disable(gl.CULL_FACE);
+
+
+        this.drawScene(gl, wireShader);
 
         //Draw the grid using flatShader
         flatShader.use(gl);
@@ -339,13 +352,13 @@ export class Scene {
     drawScene(gl, shader, b) {
         mat4.identity(this.modelMatrix);
 
-        if (b){
-            //Drawing the ground
-            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * -0.5, [1,0,0]);
-            this.setDesiredUniforms(gl, shader, [0.172285, 0.389000, 0.026521], 225.00, [0,0,0], [1,1,1]);
-            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
-            this.ground.render(gl, shader);
-        }
+        
+        //Drawing the ground
+        mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * -0.5, [1,0,0]);
+        this.setDesiredUniforms(gl, shader, [0.172285, 0.389000, 0.026521], 225.00, [0,0,0], [1,1,1]);
+        gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+        this.ground.render(gl, shader);
+        
 
         //Green Tree 1
         if(this.t1Green !== null) {

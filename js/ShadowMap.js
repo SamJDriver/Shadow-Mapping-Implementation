@@ -9,7 +9,7 @@ export class ShadowMap {
      * @param {WebGL2RenderingContext} gl the WebGL2 render context 
      */    
     constructor(gl){
-        this.worldLightPos = [0, 250, 0];
+        this.worldLightPos = [0, 1000, 0];
         this.u = [1,0,0];
         this.v = [0,1,0];
         this.w = [0,0,1];
@@ -117,6 +117,6 @@ export class ShadowMap {
 
     getProjectionMatrix(){
         const aspect = 1;
-        return mat4.perspective([], glMatrix.toRadian(45.0), aspect, 0.5, 10000.0);
+        return mat4.perspective([], glMatrix.toRadian(60.0), aspect, 0.5, 10000.0);
     }
 }
