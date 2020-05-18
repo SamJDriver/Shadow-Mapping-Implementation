@@ -17,9 +17,11 @@ export class Controls {
         this.mousePrevious = null;
         this.downKeys = new Set();
 
-        const initExposure = 250000.0;
+        const initExposure = 550000.0;
+        const initResolution = 2048;
 
         const groupEl = document.getElementById('main-group');
+        const offsetEl = document.getElementById('offset-group');
 
         // Keyboard listeners
         document.addEventListener("keydown", (e) => {
@@ -52,9 +54,6 @@ export class Controls {
         const resetBtn = document.getElementById('reset-btn');
         resetBtn.addEventListener('click', (e) => this.scene.resetCamera() );
 
-        document.getElementById('perspective-rb').addEventListener('change', (e) => this.perspOrthoChange(e) );
-        document.getElementById('ortho-rb').addEventListener('change', (e) => this.perspOrthoChange(e) );
-
         document.getElementById('mouse-mode-rb').addEventListener('change', (e) => this.modeChange(e));
         document.getElementById('fly-mode-rb').addEventListener('change', (e) => this.modeChange(e));
 
@@ -71,7 +70,57 @@ export class Controls {
             gl.uniform1f(shader.uniform('exposure'), v);
             this.update();
         });
+
+        this.resolutionSlider = new SliderControl( "Resolution:", "resolution-slider", groupEl, 
+                {min: 256, 
+                max: 4096, 
+                initial:initResolution, 
+                precision: 1,
+                valueFn: (v) => v });
+        this.resolutionSlider.addInputListener( (e) => {
+            const v = e.target.value;
+            this.scene.setShadowResolution(gl, v);
+            this.update();
+        });
+
+        this.offsetSliderFactor = new SliderControl( "Offset Factor:", "factor-slider", offsetEl, 
+                {min: 0, 
+                max: 100, 
+                initial: 0, 
+                precision: 5,
+                valueFn: (v) => v });
+        this.offsetSliderFactor.addInputListener( (e) => {
+            const v = e.target.value;
+            this.scene.offsetFactor = v;
+            this.update();
+        });
         
+        this.offsetSliderUnits = new SliderControl( "Offset Units:", "units-slider", offsetEl, 
+                {min: 0, 
+                max: 100, 
+                initial: 0, 
+                precision: 5,
+                valueFn: (v) => v });
+        this.offsetSliderUnits.addInputListener( (e) => {
+            const v = e.target.value;
+            this.scene.offsetUnits =  v;
+            this.update();
+        });
+        
+        this.pcfOffsetSlider = new SliderControl( "Offset:", "units-slider", document.getElementById('pcf-group'), 
+                {min: 0, 
+                max: 3, 
+                initial: 0, 
+                precision: 5,
+                valueFn: (v) => v });
+        this.pcfOffsetSlider.addInputListener( (e) => {
+            const v = e.target.value;
+            shader.use(gl);
+            gl.uniform1f(shader.uniform('pcfOffset'), v);
+            this.update();
+        }); 
+
+
     }
 
     update() {

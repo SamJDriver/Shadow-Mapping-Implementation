@@ -75,6 +75,7 @@ uniform vec3 Ka;
 uniform vec3 Kd;
 uniform vec3 Ks;
 uniform float d;
+uniform float pcfOffset;
 
 in vec2 fUv;
 in vec3 fNormal;    // fragment normal in eye space
@@ -90,12 +91,30 @@ out vec4 fragColor;
 
 // uniform vec3 uColor;
 // uniform vec3 uEdgeColor;
+
+float calcShadowFactor(vec4 LightSpacePos){
+    float xOffSet = pcfOffset;
+    float yOffSet = pcfOffset;
+
+    float factor = 0.0;
+
+    for (float y = -1.0; y <= 1.0; y++){
+        for (float x = -1.0; x <= 1.0; x ++){
+            vec2 offSets = vec2(x * xOffSet, y * yOffSet);
+            vec4 fPosOffset = vec4(fPositionLight.x + offSets.x, fPositionLight.y + offSets.y, 
+                fPositionLight.z, fPositionLight.w);
+            factor += textureProj(depthTexture, fPosOffset);
+        }
+    }
+    return (factor/9.0);
+}
   
 void main() {
     vec3 n   = normalize(fNormal);     // Normal (eye coords)
     vec3 wo  = normalize(-fPositionEye);  // Towards eye (eye coords)
     
     vec3 finalColor = vec3(0,0,0);
+    vec3 ambient = Kd * 0.03;
 
     float gray = textureProj(depthTexture, fPositionLight);
 
@@ -113,19 +132,15 @@ void main() {
 
         finalColor += (vec3(1.0,1.0,1.0) / (r*r)) * (diff + spec);
     }
+
+    vec4 modelColor = vec4(to_sRGB(finalColor * exposure), 1.0);
     
     // Only shade if facing the light
-    // Color the back faces an identifiable color
     if (gl_FrontFacing) {
-        if (gray == 1.0)
-            fragColor = vec4(to_sRGB(finalColor * exposure), 1.0); 
-        else
-            fragColor = vec4(to_sRGB( (finalColor*exposure) - vec3(0.5, 0.5, 0.5)), 1.0);
-       
+        //fragColor = mix(vec4(to_sRGB(ambient * exposure * 0.00001 ), 1.0), modelColor, gray ); 
+        fragColor = mix(vec4(to_sRGB(ambient * exposure * 0.00001 ), 1.0), modelColor, calcShadowFactor(fPositionLight) ); 
+
     } else {
-        fragColor = vec4(0.0, 0.0, 0.0, 1.0); 
+        fragColor = vec4( 0.0, 0.0, 0.0, 1.0); 
     }
-
-    //fragColor = vec4(gray, gray, gray, 1.0);
-
 }`;

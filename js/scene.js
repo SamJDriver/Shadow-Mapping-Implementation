@@ -33,6 +33,9 @@ export class Scene {
         this.shader = shader;
         this.depthShader = depthShader;
 
+        this.offsetFactor = 0;
+        this.offsetUnits = 0;
+
         // Variables used to store the model, view and projection matrices.
         this.modelMatrix = mat4.create();
         this.viewMatrix = mat4.create();
@@ -57,6 +60,7 @@ export class Scene {
 
         //The Shadow Map object
         this.shadowMap = new ShadowMap(gl);
+        this.shadowMap.setBuffers(gl, 2048);
 
         this.loadObj(gl);
     }
@@ -234,6 +238,48 @@ export class Scene {
             });
 
         
+        this.t6Purple = null;
+        fetch('obj2/t6-purple.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.t6Purple = new GLMesh(gl, objMesh);
+            });
+        
+        this.rock10 = null;
+        fetch('obj2/r10.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.rock10 = new GLMesh(gl, objMesh);
+            });
+
+    this.t3Cyan = null;
+    fetch('obj2/t3-cyan.obj')
+        .then( (response) => {
+            return response.text();
+        })
+        .then( (text) => {
+            let objMesh = loadObjMesh(text);
+            this.t3Cyan = new GLMesh(gl, objMesh);
+        });
+
+    this.rock4 = null;
+    fetch('obj2/r4.obj')
+        .then( (response) => {
+            return response.text();
+        })
+        .then( (text) => {
+            let objMesh = loadObjMesh(text);
+            this.rock4 = new GLMesh(gl, objMesh);
+        });
+
+        
+            
     }
 
     /**
@@ -264,6 +310,7 @@ export class Scene {
         
         this.pollKeys();
 
+        wireShader.use(gl);
         //Set the position of the light
         const lightPos = vec3.transformMat4([], this.shadowMap.worldLightPos, this.viewMatrix);
         gl.uniform3fv(gl.getUniformLocation(wireShader.programId, 'lightPosition'), lightPos);
@@ -280,8 +327,10 @@ export class Scene {
 
         gl.enable(gl.CULL_FACE);
         gl.cullFace(gl.FRONT);
+        gl.enable(gl.POLYGON_OFFSET_FILL);
+        gl.polygonOffset(this.offsetFactor, this.offsetUnits);
 
-
+    
         this.drawScene(gl, depthShader);
 
         //Reset to using the default FRAMEBUFFER
@@ -300,7 +349,7 @@ export class Scene {
         gl.uniformMatrix4fv(wireShader.uniform('shadowMatrix'), false, this.shadowMap.getShadowMatrix(this.width, this.height));
 
         gl.disable(gl.CULL_FACE);
-
+        gl.disable(gl.POLYGON_OFFSET_FILL);
 
         this.drawScene(gl, wireShader);
 
@@ -352,7 +401,6 @@ export class Scene {
     drawScene(gl, shader, b) {
         mat4.identity(this.modelMatrix);
 
-        
         //Drawing the ground
         mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * -0.5, [1,0,0]);
         this.setDesiredUniforms(gl, shader, [0.172285, 0.389000, 0.026521], 225.00, [0,0,0], [1,1,1]);
@@ -395,16 +443,24 @@ export class Scene {
             mat4.identity(this.modelMatrix);
             mat4.translate(this.modelMatrix, this.modelMatrix, [-300, 227, 50]);
             mat4.scale(this.modelMatrix, this.modelMatrix, [20, 20, 20]);
-            mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/30, [1,0,0])
+            mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/30, [1,0,0]);
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.t4Cyan.render(gl, shader);
+        }
+
+        if (this.t3Cyan !== null){
+            mat4.identity(this.modelMatrix);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [250, 75, -65]);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI/3, [0,1,0]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.t3Cyan.render(gl, shader);
         }
 
         //Orange tree
         if(this.t2orange !== null) {
             mat4.identity(this.modelMatrix);
             mat4.translate(this.modelMatrix, this.modelMatrix, [0, 105, -300]);
-            //mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
             mat4.scale(this.modelMatrix, this.modelMatrix, [20, 20, 20]);
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
 
@@ -419,6 +475,15 @@ export class Scene {
             mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.t7Purple.render(gl, shader);
+        }
+
+        if(this.t6Purple !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-100, 124, -50]);
+            //mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
+            mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.t6Purple.render(gl, shader);
         }
 
         //Yellow tree
@@ -495,12 +560,28 @@ export class Scene {
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.rock9.render(gl, shader);
         }
+        if(this.rock4 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [12, 12, 12]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [18, 0.8, 7]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.rock4.render(gl, shader);
+        }
         if(this.rock5 !== null) {
             mat4.identity(this.modelMatrix);
             mat4.scale(this.modelMatrix, this.modelMatrix, [5, 5, 5]);
             mat4.translate(this.modelMatrix, this.modelMatrix, [-60, 20, 20]);
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.rock5.render(gl, shader);
+        }
+        if(this.rock10 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [10, 10, 10]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-25, 4, -30]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI/4, [0, 1, 0]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/2, [0, 0, 1]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.rock10.render(gl, shader);
         }
         if(this.p1Green !== null) {
             mat4.identity(this.modelMatrix);
@@ -624,7 +705,7 @@ export class Scene {
         // Update the camera by applying a "dolly" motion.  The amount should be
         // proportional to delta.
 
-        this.camera.dolly(delta * 2);
+        this.camera.dolly(delta * 1);
         this.camera.getViewMatrix(this.viewMatrix);
     }
 
@@ -657,6 +738,10 @@ export class Scene {
      */
     setMode(type) {
         this.mode = type;
+    }
+
+    setShadowResolution(gl, value){
+        this.shadowMap.setBuffers(gl, value);
     }
 
 }
