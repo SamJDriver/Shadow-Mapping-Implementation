@@ -1,8 +1,11 @@
 /*Sam Driver
 CS 412
-4-15-20
+5/19/20
 Spring 2020
-PA 4 - Camera Controls
+
+This program implements shadow mapping for a forest scene with the included obj files.
+Controls complement the scene, and can change various properties about the shadows
+to help visualize solutions to common shadow mapping problems.
 */
 import { Grid } from "./grid.js";
 import { Camera } from "./camera.js"
@@ -51,6 +54,9 @@ export class Scene {
         // The camera mode
         this.mode = "mouse";
 
+        // Culling Mode
+        this.culling = 'off';
+
         // UI manager object
         this.controls = new Controls(this.canvas, this, gl, shader);
         
@@ -68,8 +74,6 @@ export class Scene {
     loadObj(gl){
         // Load the obj from an OBJ file.  Caution: the fetch method is 
         // asynchronous, so the mesh will not be immediately available.  
-        // Make sure to check for null before rendering.  Use this as an example
-        // to load other OBJ files.
         this.t3Green = null;
         fetch('obj2/t3-green.obj')
             .then( (response) => {
@@ -236,7 +240,15 @@ export class Scene {
                 let objMesh = loadObjMesh(text);
                 this.p1Green = new GLMesh(gl, objMesh);
             });
-
+        this.t6Green = null;
+        fetch('obj2/t6-green.obj')
+            .then( (response) => {
+                return response.text();
+            })
+            .then( (text) => {
+                let objMesh = loadObjMesh(text);
+                this.t6Green = new GLMesh(gl, objMesh);
+            });
         
         this.t6Purple = null;
         fetch('obj2/t6-purple.obj')
@@ -277,9 +289,47 @@ export class Scene {
             let objMesh = loadObjMesh(text);
             this.rock4 = new GLMesh(gl, objMesh);
         });
-
         
-            
+    this.t5Yellow = null;
+    fetch('obj2/t5-yellow.obj')
+        .then( (response) => {
+            return response.text();
+        })
+        .then( (text) => {
+            let objMesh = loadObjMesh(text);
+            this.t5Yellow = new GLMesh(gl, objMesh);
+        });
+
+    this.dead2 = null;
+    fetch('obj2/dead2.obj')
+        .then( (response) => {
+            return response.text();
+        })
+        .then( (text) => {
+            let objMesh = loadObjMesh(text);
+            this.dead2 = new GLMesh(gl, objMesh);
+        });
+
+    this.dead4 = null;
+    fetch('obj2/dead4.obj')
+        .then( (response) => {
+            return response.text();
+        })
+        .then( (text) => {
+            let objMesh = loadObjMesh(text);
+            this.dead4 = new GLMesh(gl, objMesh);
+        });
+    
+    this.p2Green = null;
+    fetch('obj2/p2-green.obj')
+        .then( (response) => {
+            return response.text();
+        })
+        .then( (text) => {
+            let objMesh = loadObjMesh(text);
+            this.p2Green = new GLMesh(gl, objMesh);
+        });
+
     }
 
     /**
@@ -325,12 +375,17 @@ export class Scene {
         gl.uniformMatrix4fv(depthShader.uniform('uView'), false, this.shadowMap.getLightMatrix());
         gl.uniformMatrix4fv(depthShader.uniform('uProj'), false, this.shadowMap.getProjectionMatrix(this.width, this.height));
 
-        gl.enable(gl.CULL_FACE);
-        gl.cullFace(gl.FRONT);
+        if (this.culling == 'true'){
+            gl.enable(gl.CULL_FACE);
+            gl.cullFace(gl.FRONT);
+        } else
+            gl.disable(gl.CULL_FACE);
+
         gl.enable(gl.POLYGON_OFFSET_FILL);
         gl.polygonOffset(this.offsetFactor, this.offsetUnits);
 
     
+        //Drawing our first pass
         this.drawScene(gl, depthShader);
 
         //Reset to using the default FRAMEBUFFER
@@ -351,12 +406,13 @@ export class Scene {
         gl.disable(gl.CULL_FACE);
         gl.disable(gl.POLYGON_OFFSET_FILL);
 
+        //Draw the second pass
         this.drawScene(gl, wireShader);
 
-        //Draw the grid using flatShader
-        flatShader.use(gl);
-        this.setMatrices(gl, flatShader);
-        this.grid.render(gl, flatShader);
+        //Draw the grid using flatShader *for scene setup*
+        // flatShader.use(gl);
+        // this.setMatrices(gl, flatShader);
+        // this.grid.render(gl, flatShader);
     }
 
     /**
@@ -407,6 +463,8 @@ export class Scene {
         gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
         this.ground.render(gl, shader);
         
+
+        //Drawing the objects in the scene
 
         //Green Tree 1
         if(this.t1Green !== null) {
@@ -480,10 +538,18 @@ export class Scene {
         if(this.t6Purple !== null) {
             mat4.identity(this.modelMatrix);
             mat4.translate(this.modelMatrix, this.modelMatrix, [-100, 124, -50]);
-            //mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
             mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.t6Purple.render(gl, shader);
+        }
+
+        if(this.t6Green !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [135, 75.5, 55]);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [15, 15, 15]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0])
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.t6Green.render(gl, shader);
         }
 
         //Yellow tree
@@ -494,6 +560,13 @@ export class Scene {
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.t2Yellow.render(gl, shader);
         }
+        if(this.t5Yellow !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [-410, 177, -420]);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.t5Yellow.render(gl, shader);
+        }
 
         //Dead stump
         if(this.trunk !== null) {
@@ -503,7 +576,15 @@ export class Scene {
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.trunk.render(gl, shader);
         }
+        if(this.dead2 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [15, 2.42, 8]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.3, [0,1,0]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
 
+            this.dead2.render(gl, shader);
+        }
         if(this.dead3 !== null) {
             mat4.identity(this.modelMatrix);
             mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
@@ -514,6 +595,16 @@ export class Scene {
             this.dead3.render(gl, shader);
         }
 
+        if(this.dead4 !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [25, 25, 25]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [14, 2.1, -12]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI * 0.4, [0,1,0]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+
+            this.dead4.render(gl, shader);
+        }
+
         //Tree trunk
         if(this.trunk2 !== null) {
             mat4.identity(this.modelMatrix);
@@ -521,7 +612,14 @@ export class Scene {
             mat4.translate(this.modelMatrix, this.modelMatrix, [-13.5, 2.5, -2]);
             mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/5, [1, 0, 0]);
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.trunk2.render(gl, shader);
 
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [35, 35, 35]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [4, 0.7, 5]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, Math.PI/3, [0, 1, 0]);
+            mat4.rotate(this.modelMatrix, this.modelMatrix, -Math.PI/5, [0, 0, 1]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.trunk2.render(gl, shader);
         }
 
@@ -589,6 +687,13 @@ export class Scene {
             mat4.translate(this.modelMatrix, this.modelMatrix, [-30, 10.8, 18]);
             gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
             this.p1Green.render(gl, shader);
+        }
+        if(this.p2Green !== null) {
+            mat4.identity(this.modelMatrix);
+            mat4.scale(this.modelMatrix, this.modelMatrix, [13, 13, 13]);
+            mat4.translate(this.modelMatrix, this.modelMatrix, [7, 1.7, 23]);
+            gl.uniformMatrix4fv(shader.uniform('uModel'), false, this.modelMatrix);
+            this.p2Green.render(gl, shader);
         }
         if(this.f4 !== null) {
             mat4.identity(this.modelMatrix);
@@ -715,20 +820,9 @@ export class Scene {
      */
     resetCamera() {
         // Set the camera's default position/orientation
-        this.camera.orient([50,25,3], [0,20,0], [0,1,0]);
+        this.camera.orient([500,100,0], [0,20,0], [0,1,0]);
         // Retrieve the new view matrix
         this.camera.getViewMatrix(this.viewMatrix);
-    }
-
-    /**
-     * Set the view volume type.  This is called when the perspective/orthographic radio button
-     * is changed.
-     * 
-     * @param {String} type projection type.  Either "perspective" or "orthographic" 
-     */
-    setViewVolume( type ) {
-        this.projType = type;
-        this.setProjectionMatrix();
     }
 
     /**
@@ -740,8 +834,11 @@ export class Scene {
         this.mode = type;
     }
 
+    setLinearMode(gl, value, mode){
+        this.shadowMap.setBuffers(gl, value, mode);
+    }
+
     setShadowResolution(gl, value){
         this.shadowMap.setBuffers(gl, value);
     }
-
 }

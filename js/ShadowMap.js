@@ -17,49 +17,9 @@ export class ShadowMap {
 
         this.rotation = mat4.create();
         this.translation = mat4.create();
-        //store depth value to plane 
-        //depth is same as point 
-        //when theyre actually equal due to precision floating point limit > sometimes bigger sometimes smaller
-        //turn on front face culling in shadow pass
-
-        //Creating and binding depth buffer texture
-        // this.depthTexture = gl.createTexture();
-        // this.depthTextureSize = 4096;
-        // gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
-        // gl.texImage2D(
-        //     gl.TEXTURE_2D,      // target
-        //     0,                  // mip level
-        //     gl.DEPTH_COMPONENT32F, // internal format
-        //     this.depthTextureSize,   // width
-        //     this.depthTextureSize,   // height
-        //     0,                  // border
-        //     gl.DEPTH_COMPONENT, // format
-        //     gl.FLOAT,    // type
-        //     null);   
-
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        // // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
-        // // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LEQUAL);
-
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-
-        // // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        // // gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-        // this.depthFrameBuffer = gl.createFramebuffer();
-        // gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFrameBuffer);
-        // gl.framebufferTexture2D(
-        //     gl.FRAMEBUFFER, 
-        //     gl.DEPTH_ATTACHMENT,
-        //     gl.TEXTURE_2D,
-        //     this.depthTexture, 0);
-
     }
 
-    setBuffers(gl, resolution){
+    setBuffers(gl, resolution, mode){
         //Creating and binding depth buffer texture
         this.depthTexture = gl.createTexture();
         this.depthTextureSize = resolution;
@@ -74,16 +34,16 @@ export class ShadowMap {
             gl.DEPTH_COMPONENT, // format
             gl.FLOAT,    // type
             null);   
+        
+        if (mode == 'on')
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        else
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        // gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
         this.depthFrameBuffer = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.depthFrameBuffer);

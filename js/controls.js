@@ -19,6 +19,7 @@ export class Controls {
 
         const initExposure = 550000.0;
         const initResolution = 2048;
+        this.res = 2048;
 
         const groupEl = document.getElementById('main-group');
         const offsetEl = document.getElementById('offset-group');
@@ -49,14 +50,6 @@ export class Controls {
             e.preventDefault();
             this.scene.mouseWheel(e.deltaY);
         });
-        
-        // Controls
-        const resetBtn = document.getElementById('reset-btn');
-        resetBtn.addEventListener('click', (e) => this.scene.resetCamera() );
-
-        document.getElementById('mouse-mode-rb').addEventListener('change', (e) => this.modeChange(e));
-        document.getElementById('fly-mode-rb').addEventListener('change', (e) => this.modeChange(e));
-
 
         shader.use(gl);
         gl.uniform1f(shader.uniform('exposure'), initExposure);
@@ -70,6 +63,21 @@ export class Controls {
             gl.uniform1f(shader.uniform('exposure'), v);
             this.update();
         });
+        
+        
+        // Controls
+        const resetBtn = document.getElementById('reset-btn');
+        resetBtn.addEventListener('click', (e) => this.scene.resetCamera() );
+
+        document.getElementById('mouse-mode-rb').addEventListener('change', (e) => this.modeChange(e));
+        document.getElementById('fly-mode-rb').addEventListener('change', (e) => this.modeChange(e));
+
+        document.getElementById('culling-on-rb').addEventListener('change', (e) => this.cullingModeChange(e));
+        document.getElementById('culling-off-rb').addEventListener('change', (e) => this.cullingModeChange(e));
+
+        document.getElementById('linear-on-rb').addEventListener('change', (e) => this.LinearModeChange(e, gl));
+        document.getElementById('linear-off-rb').addEventListener('change', (e) => this.LinearModeChange(e, gl));
+
 
         this.resolutionSlider = new SliderControl( "Resolution:", "resolution-slider", groupEl, 
                 {min: 256, 
@@ -79,6 +87,7 @@ export class Controls {
                 valueFn: (v) => v });
         this.resolutionSlider.addInputListener( (e) => {
             const v = e.target.value;
+            this.res = v;
             this.scene.setShadowResolution(gl, v);
             this.update();
         });
@@ -163,29 +172,29 @@ export class Controls {
         this.mousePrevious[1] = y;
     }
 
-    /**
-     * Called when the perspective/orthographic radio button is changed.
-     * 
-     * @param {Event} e 
-     */
-    perspOrthoChange(e) {
-        if( e.target.value === "perspective" ) {
-            this.scene.setViewVolume("perspective");
-        } else {
-            this.scene.setViewVolume("orthographic");
-        }
-    }
-
-    /**
-     * Called when the fly/mouse mode radio button is changed.
-     * 
-     * @param {Event} e 
-     */
     modeChange(e) {
         if( e.target.value === "mouse") {
             this.scene.setMode("mouse");
         } else {
             this.scene.setMode("fly");
         }
+    }
+
+    cullingModeChange(e){
+        if( e.target.value === "true") {
+            this.scene.culling = "true";
+        } else {
+            this.scene.culling = "false";
+        }
+        this.update();
+    }
+
+    LinearModeChange(e, gl) {
+        if( e.target.value === "on") {
+            this.scene.setLinearMode(gl, this.res,"on");
+        } else {
+            this.scene.setLinearMode(gl, this.res, "off");
+        }
+        this.update();
     }
 }

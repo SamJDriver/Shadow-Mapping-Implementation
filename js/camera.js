@@ -130,8 +130,16 @@ export class Camera {
         // y-axis by horizAngle.
 
         let m = mat4.create();
-        mat4.rotate(m, m, vertAngle, this.u);
         mat4.rotate(m, m, horizAngle, [0,1,0]);
+        //Rotate u
+        vec3.transformMat4(this.u, this.u, m);
+        //Rotate v
+        vec3.transformMat4(this.v, this.v, m);
+        //Rotate w
+        vec3.transformMat4(this.w, this.w, m);
+
+        m = mat4.create();
+        mat4.rotate(m, m, vertAngle, this.u);
         //Rotate u
         vec3.transformMat4(this.u, this.u, m);
         //Rotate v

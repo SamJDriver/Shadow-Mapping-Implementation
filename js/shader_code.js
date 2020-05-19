@@ -68,6 +68,7 @@ precision highp sampler2DShadow;
 uniform vec3 lightColors[ NUM_LIGHTS ];
 uniform vec3 lightPosition; // in eye space
 
+//Uniforms from mtl file
 uniform float exposure;
 uniform float roughness;
 uniform float Ns;
@@ -92,6 +93,7 @@ out vec4 fragColor;
 // uniform vec3 uColor;
 // uniform vec3 uEdgeColor;
 
+//Percentage Closer Filtering Calculation
 float calcShadowFactor(vec4 LightSpacePos){
     float xOffSet = pcfOffset;
     float yOffSet = pcfOffset;
@@ -116,7 +118,8 @@ void main() {
     vec3 finalColor = vec3(0,0,0);
     vec3 ambient = Kd * 0.03;
 
-    float gray = textureProj(depthTexture, fPositionLight);
+    //Not used because PCF is used
+    //float gray = textureProj(depthTexture, fPositionLight);
 
     for (int i = 0; i < NUM_LIGHTS; i++) {
         vec3 wi = lightPosition - fPositionEye;  
@@ -137,9 +140,7 @@ void main() {
     
     // Only shade if facing the light
     if (gl_FrontFacing) {
-        //fragColor = mix(vec4(to_sRGB(ambient * exposure * 0.00001 ), 1.0), modelColor, gray ); 
         fragColor = mix(vec4(to_sRGB(ambient * exposure * 0.00001 ), 1.0), modelColor, calcShadowFactor(fPositionLight) ); 
-
     } else {
         fragColor = vec4( 0.0, 0.0, 0.0, 1.0); 
     }
